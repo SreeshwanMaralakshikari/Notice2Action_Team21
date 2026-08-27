@@ -56,7 +56,7 @@ export default function Processing() {
         if (payload.type === "paste") {
           form.append("text", payload.text);
         } else {
-          form.append("notice", payload.file);
+          form.append("pdf", payload.file);
         }
 
         const res = await axiosInstance.post("/process", form, {
