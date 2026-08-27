@@ -1,0 +1,13 @@
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
+
+/**
+ * Extracts plain text from a PDF buffer (from multer memory storage).
+ * @param {Buffer} buffer  - The PDF file buffer
+ * @returns {Promise<string>} - Extracted text
+ */
+export async function extractPdfText(buffer) {
+  const data = await pdfParse(buffer);
+  const text = data.text?.trim();
+  if (!text) throw new Error("Could not extract text from the uploaded PDF.");
+  return text;
+}
