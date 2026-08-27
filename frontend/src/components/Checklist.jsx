@@ -3,16 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
 
 const C = {
-  bg: "#0f172a",
-  surface: "#1e293b",
-  border: "#334155",
-  accent: "#6366f1",
-  text: "#f1f5f9",
-  muted: "#94a3b8",
-  danger: "#ef4444",
-  dangerBg: "#7f1d1d22",
-  success: "#22c55e",
-  successBg: "#14532d22",
+  bg: "#070c18",
+  surface: "#0d1929",
+  border: "#1c3251",
+  accent: "#f97316",
+  text: "#e4ecf7",
+  muted: "#5e7ea8",
+  danger: "#f43f5e",
+  dangerBg: "#4c051922",
+  success: "#10b981",
+  successBg: "#02261e22",
 };
 
 export default function Checklist() {
@@ -70,7 +70,7 @@ export default function Checklist() {
       minHeight: "100vh",
       background: C.bg,
       color: C.text,
-      fontFamily: "'Inter', system-ui, sans-serif",
+      fontFamily: "'DM Sans', system-ui, sans-serif",
       padding: "40px 16px 80px",
       display: "flex",
       flexDirection: "column",
@@ -87,7 +87,7 @@ export default function Checklist() {
     logo: {
       fontSize: 20,
       fontWeight: 800,
-      background: "linear-gradient(135deg,#818cf8,#6366f1)",
+      background: "linear-gradient(135deg, #fbbf24, #f97316)",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
       cursor: "pointer",
@@ -201,7 +201,7 @@ export default function Checklist() {
     skeleton: {
       height: 20,
       borderRadius: 6,
-      background: "linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%)",
+      background: "linear-gradient(90deg, #0d1929 25%, #1c3251 50%, #0d1929 75%)",
       backgroundSize: "200% 100%",
       animation: "shimmer 1.4s infinite",
       marginBottom: 12,

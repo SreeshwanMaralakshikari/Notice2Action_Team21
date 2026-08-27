@@ -4,14 +4,14 @@ import axiosInstance from "../axiosInstance";
 import { saveToRecent } from "../store/noticeStore";
 
 const C = {
-  bg: "#0f172a",
-  surface: "#1e293b",
-  border: "#334155",
-  accent: "#6366f1",
-  text: "#f1f5f9",
-  muted: "#94a3b8",
-  danger: "#ef4444",
-  dangerBg: "#7f1d1d22",
+  bg: "#070c18",
+  surface: "#0d1929",
+  border: "#1c3251",
+  accent: "#f97316",
+  text: "#e4ecf7",
+  muted: "#5e7ea8",
+  danger: "#f43f5e",
+  dangerBg: "#4c051922",
 };
 
 // Steps shown while the AI works
@@ -82,7 +82,7 @@ export default function Processing() {
       minHeight: "100vh",
       background: C.bg,
       color: C.text,
-      fontFamily: "'Inter', system-ui, sans-serif",
+      fontFamily: "'DM Sans', system-ui, sans-serif",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -93,7 +93,7 @@ export default function Processing() {
     logo: {
       fontSize: 22,
       fontWeight: 800,
-      background: "linear-gradient(135deg,#818cf8,#6366f1)",
+      background: "linear-gradient(135deg, #fbbf24, #f97316)",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
     },
