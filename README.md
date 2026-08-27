@@ -1,76 +1,17 @@
 # Notice2Action
-**AU.28 Hackathon-01 · Project No. 4**
 
-Turn long, complex notices into a clear summary, deadlines, eligibility conditions, and a tickable action checklist — instantly.
+A web app that takes a long, formal campus notice — exam schedule, fee circular, scholarship announcement, hostel update — and turns it into three clean outputs: a short plain-language summary, the key deadlines and who the notice applies to, and a step-by-step checklist of what you actually need to do.
 
----
+GitHub: https://github.com/SreeshwanMaralakshikari/Notice2Action_Team21
 
-## Quick Start
+Backend Deployment Link: https://notice2action-team21.onrender.com
 
-### 1 — Prerequisites
-- Node.js 18+ installed
-- MongoDB running locally (`mongod`) **or** a free MongoDB Atlas connection string
-
-### 2 — Clone / Extract
-Extract this folder anywhere on your laptop.
-
-### 3 — Backend setup
-```bash
-cd Notice2Action/backend
-cp .env.example .env          # then edit .env with your values
-npm install
-npm run dev                   # starts on http://localhost:5000
-```
-
-**`.env` values to fill in:**
-
-| Variable | Value |
-|---|---|
-| `PORT` | `5000` (default) |
-| `DB_URL` | `mongodb://127.0.0.1:27017/notice2action` (local) or your Atlas URI |
-| `GEMINI_API_KEY` | Get free from https://aistudio.google.com/app/apikey |
-| `FRONTEND_URL` | `http://localhost:5173` (default) |
-
-> **No Gemini key yet?** Leave the placeholder — the app still runs and returns mock data so you can test the full UI flow.
-
-### 4 — Frontend setup
-```bash
-cd Notice2Action/frontend
-npm install
-npm run dev                   # starts on http://localhost:5173
-```
-
-Open **http://localhost:5173** in your browser. ✅
+Frontend Deployment Link: https://notice2-action-team21.vercel.app
 
 ---
 
-## Project Structure
-```
-Notice2Action/
-├── backend/
-│   ├── server.js               # Express entry point
-│   ├── APIs/NoticeAPI.js       # POST /process  GET /notice/:id  PUT /notice/:id/checklist
-│   ├── models/NoticeModel.js   # Mongoose schema
-│   ├── config/gemini.js        # Gemini SDK client
-│   ├── utils/
-│   │   ├── buildNoticePrompt.js
-│   │   └── extractPdfText.js
-│   └── http/notice.http        # Manual API tests (use VS Code REST Client)
-└── frontend/src/
-    ├── App.jsx                 # Routes
-    ├── axiosInstance.js
-    ├── store/noticeStore.js    # localStorage recent-notices
-    ├── styles/common.js        # Design tokens
-    └── components/
-        ├── Home.jsx            # Screen 1 — paste / upload
-        ├── Processing.jsx      # Screen 2 — loading
-        ├── Results.jsx         # Screen 3 — summary + deadlines + eligibility
-        └── Checklist.jsx       # Screen 4 — tickable checklist
-```
+## Team — AU.28 Hackathon-01, Project No. 4
 
----
-
-## Team
 | S.No | Roll No | Name |
 |---|---|---|
 | 1 | 24EG105G09 | Chekka Gowri Priya |
@@ -78,3 +19,224 @@ Notice2Action/
 | 3 | 24EG105Q23 | Yelle Pawan Kalyan |
 | 4 | 24EG105Q44 | Kontham Alaveni |
 | 5 | 24EG105Q47 | Maralakshikari Sreeshwan |
+
+---
+
+## Problem Statement
+
+Students and staff on campus are surrounded by important notices — exam schedules, fee-payment deadlines, scholarship announcements, hostel circulars, event registrations, and administrative updates. These notices are consistently long, text-heavy, and written in formal language that buries the actual information inside paragraphs of institutional phrasing.
+
+The result is predictable: important dates get missed, eligibility conditions go unread, and students spend ten minutes on a notice that should have taken thirty seconds. There is no simple way for a student to quickly answer three questions — What does this notice mean? Does it apply to me? What do I need to do, and by when?
+
+The existing workflow is entirely manual. A student receives a notice, reads it in full, mentally extracts the relevant dates and conditions, and tries to remember what steps they need to take. There is no tool designed specifically to automate this process for campus notices.
+
+---
+
+## Proposed Solution
+
+Notice2Action is an AI-powered tool that converts any campus notice into three structured, actionable outputs in under a minute.
+
+A user pastes the text of a notice or uploads a PDF. The backend extracts the text if needed, then sends it to Google Gemini with a carefully structured prompt that instructs the model to return a fixed JSON object containing a plain-language summary, a list of deadline-label pairs, a list of eligibility conditions, a categorised action checklist, and a notice category label.
+
+The result is saved to MongoDB and returned to the frontend, which presents it across two screens: a Results screen with the summary and deadline/eligibility panel, and a Checklist screen where the user can tick off action items one by one. Checklist progress is persisted to the server so it survives a page refresh. Recent notices are stored in the browser so the user can navigate back to any of them without re-processing.
+
+The approach is intentionally simple: one input, one AI call, one structured result. No account required. No configuration. Works for any type of campus notice.
+
+---
+
+## Key Features
+
+### Notice Input
+- Paste plain text directly into a textarea
+- Upload a PDF — the backend extracts the text automatically using pdf-parse
+- Drag-and-drop file upload supported
+- Tab switcher between paste and upload modes on the Home screen
+
+---
+
+### AI-Generated Summary
+- Plain-language overview of what the notice is about
+- Generated by Google Gemini and written to be understood in one reading
+- Presented as the first card on the Results screen
+
+---
+
+### Deadline Extraction
+- Every key date identified, labeled, and surfaced as a `{ label, date }` pair (e.g. "Fee payment deadline — 30 Aug 2026")
+- Dates stored as strings rather than parsed Date objects to handle natural-language expressions Gemini returns that cannot be reliably converted to ISO format
+- If no deadlines are found, the panel says so rather than showing an empty section
+
+---
+
+### Eligibility Extraction
+- Conditions specifying who the notice applies to are extracted and listed separately (e.g. "3rd year B.Tech students", "All branches")
+- Listed alongside deadlines in the same panel on the Results screen
+- If no eligibility conditions are found, the panel says so
+
+---
+
+### Action Checklist
+- Step-by-step list of what the user actually needs to do, generated by Gemini from the notice content
+- Each item is tickable
+- Progress bar at the top of the Checklist screen tracks completed steps
+- Completion banner appears when every item is ticked
+- Checklist state is persisted to MongoDB immediately on each tick — progress survives a page refresh or a new browser session at the same URL
+
+---
+
+### Recent Notices
+- Home screen shows a strip of recently processed notices stored in localStorage
+- Clicking any row navigates back to that notice's Results screen without re-processing
+- No account required — history is per-browser
+
+---
+
+## Technologies Used
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, Vite 8, Tailwind CSS 4, React Router 7, Axios |
+| Backend | Node.js, Express 5, Mongoose 9, Multer 2 |
+| AI | Google Gemini API (gemini-3.6-flash) |
+| PDF Parsing | pdf-parse |
+| Database | MongoDB (Atlas in production) |
+| Deployment | Vercel (frontend), Render (backend), MongoDB Atlas (database) |
+
+---
+
+## Implementation Details
+
+### Project Structure
+
+```
+Notice2Action/
+│
+├── backend/
+│   ├── server.js                   # Express app, CORS, DB connection
+│   ├── APIs/
+│   │   └── NoticeAPI.js            # All three routes
+│   ├── config/
+│   │   └── gemini.js               # Google Generative AI SDK setup
+│   ├── models/
+│   │   └── NoticeModel.js          # Mongoose schema
+│   └── utils/
+│       ├── extractPdfText.js       # pdf-parse wrapper (buffer → string)
+│       └── buildNoticePrompt.js    # Builds the Gemini prompt
+│
+└── frontend/
+    └── src/
+        ├── main.jsx
+        ├── App.jsx                  # Router config — four routes
+        ├── axiosInstance.js         # Axios singleton (reads VITE_API_URL)
+        ├── store/
+        │   └── noticeStore.js       # localStorage-backed recent notices history
+        ├── styles/
+        │   └── common.js            # Tailwind class tokens
+        └── components/
+            ├── Home.jsx             # Screen 1 — paste/upload + recent strip
+            ├── Processing.jsx       # Screen 2 — loading state + error handling
+            ├── Results.jsx          # Screen 3 — summary, deadlines, eligibility
+            └── Checklist.jsx        # Screen 4 — tickable action list
+```
+
+---
+
+### Database Schema
+
+#### NoticeModel
+
+```js
+{
+    summary,        // String — plain-language overview generated by Gemini
+    deadlines,      // [{ label: String, date: String }] — extracted deadline pairs
+    eligibility,    // [String] — list of eligibility conditions
+    checklist,      // [{ task: String, done: Boolean }] — action items with tick state
+    category,       // String — notice type e.g. Fee, Exam, Scholarship, Hostel, Event
+    createdAt,      // Date — auto-set by Mongoose timestamps
+    updatedAt       // Date — updated whenever a checklist item is ticked or unticked
+}
+```
+
+---
+
+### API Endpoints
+
+All routes are mounted under `/notice-api`.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/notice-api/process` | Process a notice. Accepts pasted text as JSON `{ "text": "..." }` or a PDF file as multipart form data. Runs the full AI pipeline and returns the saved notice object including its `_id`. |
+| GET | `/notice-api/notice/:id` | Fetch a previously processed notice by its MongoDB `_id`. Used by the frontend when navigating to Results or Checklist from the Recent strip. |
+| PUT | `/notice-api/notice/:id/checklist` | Update the `done` field on a single checklist item. Body: `{ "index": 2, "done": true }`. Called every time a user ticks or unticks a step. |
+
+---
+
+### AI Pipeline
+
+1. **Text extraction** — if the request is a PDF upload, Multer captures the file in memory (no disk writes). `extractPdfText.js` passes the buffer to `pdf-parse`, which returns the raw text string. Pasted text is used directly.
+
+2. **Prompt construction** — `buildNoticePrompt.js` wraps the notice text in a prompt that instructs Gemini to return a JSON object with exactly five fields: `summary`, `deadlines`, `eligibility`, `checklist`, and `category`. The schema for each field is spelled out explicitly so the output is always parseable without a validation layer.
+
+3. **Gemini call** — `gemini.js` initialises the Google Generative AI SDK with the API key and exports a configured model. The route calls `model.generateContent(prompt)` and reads `response.text()`.
+
+4. **Response parsing** — Gemini occasionally wraps its JSON in markdown code fences. A regex strips any leading ` ```json ` or ` ``` ` and trailing ` ``` ` before `JSON.parse` runs. A parse failure returns 500 with the raw response for debugging.
+
+5. **Save and respond** — the parsed object is saved as a `NoticeModel` document with `timestamps: true`. The full saved document including its MongoDB `_id` is returned as JSON with status 201.
+
+---
+
+### Frontend Screens
+
+**Home (`/`)** — Two tabs: paste text and upload PDF. A drag-and-drop area handles PDF files. Submitting navigates to `/processing` with the form data in React Router location state. A Recent Notices strip at the bottom reads from localStorage and lets the user click back to any previous result.
+
+**Processing (`/processing`)** — Reads the pending data from location state and calls `POST /notice-api/process`. An animated step list plays while the request is in flight. On success, the notice is saved to `noticeStore.js` and the component navigates to `/results/:id`. On failure, an error card appears with a "Go back" button.
+
+**Results (`/results/:id`)** — Fetches the notice by ID on mount. Shows three sections: the Summary card, a Deadlines and Eligibility panel (with a message if either list is empty), and a button to open the Checklist. A "Process another notice" link returns to Home.
+
+**Checklist (`/checklist/:id`)** — Fetches the notice by ID on mount. Renders each checklist item as a tickable row with a progress bar at the top. Ticking or unticking calls `PUT /notice-api/notice/:id/checklist` with `{ index, done }` and updates local state optimistically. A completion banner appears when every item is ticked.
+
+---
+
+### Deployment Configuration
+
+- **Frontend on Vercel** — `vercel.json` contains a rewrite rule that maps all paths to `index.html`, required for React Router to work correctly. Without it, refreshing any URL other than `/` returns a 404.
+- **Backend on Render** — free tier Node.js web service. Spins down after 15 minutes of inactivity; cold starts take around 30 seconds.
+- **Database on MongoDB Atlas** — free M0 cluster. The Atlas network access list must include `0.0.0.0/0` to accept connections from Render's dynamic IPs.
+- **CORS** — the allowed origins list is built with `filter(Boolean)` so a missing `FRONTEND_URL` environment variable does not silently add `undefined` as a permitted origin.
+
+---
+
+## Future Scope
+
+- **Image and photo OCR** — accept photos of physical notice boards. Run OCR on the image before the AI step to extract the text, then process it through the same pipeline.
+
+- **Multi-language support** — campus notices in regional languages (Telugu, Tamil, Hindi) would be automatically translated to English before processing, then optionally output in the original language.
+
+- **Deadline reminders** — users opt in to browser or email notifications. Alerts fire 24 hours before any extracted deadline, using the stored `{ label, date }` pairs.
+
+- **User accounts and cross-device sync** — notice history and checklist progress would be tied to a user account rather than a browser's localStorage, so progress survives across devices.
+
+- **Shareable summary cards** — a one-click share button generates a compact card (summary + top deadline + checklist count) formatted for WhatsApp or email, so students can forward the key information without forwarding the whole PDF.
+
+- **Notice categorisation dashboard** — for college administrators, a view showing all notices processed by their students, grouped by category and sorted by deadline, to understand which notices are seeing the most engagement.
+
+- **Browser extension** — a Chrome or Firefox extension that lets users right-click any selected text on any website and send it directly to Notice2Action for processing, removing the copy-paste step.
+
+---
+
+## References and Bibliography
+
+- Google Generative AI SDK for Node.js — https://www.npmjs.com/package/@google/generative-ai
+- Google AI Studio (Gemini API) — https://aistudio.google.com
+- Gemini model documentation — https://ai.google.dev/gemini-api/docs
+- pdf-parse npm package — https://www.npmjs.com/package/pdf-parse
+- MongoDB Mongoose documentation — https://mongoosejs.com/docs
+- Express 5 documentation — https://expressjs.com
+- React 19 documentation — https://react.dev
+- Vite documentation — https://vitejs.dev
+- Tailwind CSS v4 documentation — https://tailwindcss.com/docs
+- React Router v7 documentation — https://reactrouter.com/en/main
+- Multer npm package — https://www.npmjs.com/package/multer
+- MongoDB Atlas — https://www.mongodb.com/atlas
+- Vercel deployment documentation — https://vercel.com/docs
+- Render deployment documentation — https://render.com/docs
