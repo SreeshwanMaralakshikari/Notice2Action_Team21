@@ -1,40 +1,69 @@
 /**
  * Builds the Gemini prompt for notice parsing.
- * Returns a prompt string that asks Gemini for strict JSON only.
+ * Returns a prompt string that asks Gemini for strict JSON only —
+ * using the richer Phase 4 schema (organization, importantDates,
+ * documents, actions, links, contacts, uncertainties).
  */
-export function buildNoticePrompt(rawText) {
+export function buildNoticePrompt(rawText, fileName = 'Pasted Notice') {
   return `
-You are an AI assistant that reads official notices and extracts structured information.
+You are Notice2Action AI, an expert academic and career notice intelligence engine for college students.
+Your mission: "Don't just understand the notice. Know what the student needs to do."
 
-Given the notice text below, return ONLY a valid JSON object — no markdown, no code fences, no extra text — that matches this exact schema:
-
-{
-  "summary": "A 2-3 sentence plain-language summary of what the notice is about.",
-  "category": "One of: Exam | Fee | Scholarship | Hostel | Event | Other",
-  "deadlines": [
-    { "label": "What this date is for", "date": "DD MMM YYYY or as stated" }
-  ],
-  "eligibility": [
-    "Condition 1",
-    "Condition 2"
-  ],
-  "checklist": [
-    { "task": "Action the reader must take", "done": false }
-  ]
-}
-
-Rules:
-- summary: plain English, no jargon, max 3 sentences.
-- category: pick the single best fit from the enum.
-- deadlines: list every concrete date or deadline mentioned. Use the date exactly as stated in the notice.
-- eligibility: list every condition that determines who this notice applies to. If none, return an empty array.
-- checklist: list every concrete action the reader must take to comply with or benefit from the notice. Each task should be a short, clear imperative sentence.
-- done is always false — it is toggled by the user later.
-- If a field has no data, return an empty array (not null).
+Analyze the following notice and return ONLY a valid JSON object — no markdown, no explanation.
+Ground all information strictly on the text. If any detail is missing, set it to
+"Not specified in the notice." rather than guessing.
 
 NOTICE TEXT:
 """
 ${rawText}
 """
+
+Return this exact JSON structure:
+{
+  "title": "Clear concise title",
+  "organization": "Issuing college, company, or ministry",
+  "category": "One of: Scholarship | Internship | Placement | Examination | Competition | Workshop | Event | Academic Opportunity | Government Opportunity | General Notice",
+  "summary": "2-3 sentence plain-language summary of what this is, its benefit, and primary objective.",
+  "eligibility": [
+    {
+      "criterion": "e.g. Minimum CGPA / Eligible Branches / Eligible Years / Graduation Year / Income Limit",
+      "value": "e.g. 7.5 or above / CSE, IT, ECE / 2nd to 4th Year",
+      "source": "Exact phrase from notice",
+      "isMandatory": true
+    }
+  ],
+  "importantDates": [
+    {
+      "type": "e.g. Application Deadline / Exam Date / Document Submission",
+      "date": "YYYY-MM-DD or readable date string",
+      "source": "Exact phrase from notice",
+      "isDeadline": true
+    }
+  ],
+  "documents": [
+    {
+      "name": "e.g. Aadhaar Card / Latest Marksheet / Income Certificate",
+      "required": true,
+      "source": "Exact phrase from notice"
+    }
+  ],
+  "actions": [
+    {
+      "title": "Short action title",
+      "description": "What the student needs to do, step by step",
+      "priority": "high | medium | low",
+      "deadline": "YYYY-MM-DD or relevant date"
+    }
+  ],
+  "links": [
+    { "label": "Official Portal", "url": "https://..." }
+  ],
+  "contacts": [
+    { "type": "email | phone | office", "value": "contact@college.edu" }
+  ],
+  "uncertainties": [
+    "Any ambiguous clause or missing information the student should verify manually."
+  ]
+}
 `.trim();
 }

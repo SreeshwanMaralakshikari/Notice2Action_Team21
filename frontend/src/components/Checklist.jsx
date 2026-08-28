@@ -15,11 +15,39 @@ const C = {
   successBg: "#02261e22",
 };
 
+const PRIORITY = {
+  high:   { label: "High",   icon: "🔴", color: "#f43f5e", bg: "#4c051910" },
+  medium: { label: "Medium", icon: "🟡", color: "#fbbf24", bg: "#451a0310" },
+  low:    { label: "Low",    icon: "🟢", color: "#10b981", bg: "#02261e10" },
+};
+
+function PriorityBadge({ priority }) {
+  const p = PRIORITY[priority] || PRIORITY.medium;
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: "0.4px",
+        padding: "2px 7px",
+        borderRadius: 4,
+        background: p.bg,
+        color: p.color,
+        border: `1px solid ${p.color}44`,
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {p.icon} {p.label}
+    </span>
+  );
+}
+
 export default function Checklist() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [items, setItems] = useState([]);     // [{task, done}]
+  const [items, setItems] = useState([]);     // [{task, done, priority}]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(null); // index being saved
@@ -64,6 +92,9 @@ export default function Checklist() {
 
   const doneCount = items.filter((i) => i.done).length;
   const allDone = items.length > 0 && doneCount === items.length;
+
+  // Sort: high → medium → low (undone first, done at the bottom)
+  const sortedItems = [...items].map((item, originalIndex) => ({ ...item, originalIndex }));
 
   const s = {
     page: {
@@ -145,7 +176,7 @@ export default function Checklist() {
       background: done ? `${C.success}08` : "transparent",
       transition: "background .15s",
     }),
-    checkbox: (done, saving) => ({
+    checkbox: (done, isSaving) => ({
       width: 20,
       height: 20,
       borderRadius: 6,
@@ -155,8 +186,8 @@ export default function Checklist() {
       alignItems: "center",
       justifyContent: "center",
       flexShrink: 0,
-      marginTop: 1,
-      opacity: saving ? 0.5 : 1,
+      marginTop: 2,
+      opacity: isSaving ? 0.5 : 1,
       transition: "all .15s",
     }),
     taskText: (done) => ({
@@ -279,21 +310,20 @@ export default function Checklist() {
             <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
             No action items were extracted for this notice.
             <br />
-            <span style={{ fontSize: 12 }}>
-              The notice may be informational only.
-            </span>
+            <span style={{ fontSize: 12 }}>The notice may be informational only.</span>
           </div>
         ) : (
-          items.map((item, i) => (
+          sortedItems.map((item, i) => (
             <div
-              key={i}
+              key={item.originalIndex}
               style={{
                 ...s.row(item.done),
-                ...(i === items.length - 1 ? { borderBottom: "none" } : {}),
+                ...(i === sortedItems.length - 1 ? { borderBottom: "none" } : {}),
               }}
-              onClick={() => toggle(i)}
+              onClick={() => toggle(item.originalIndex)}
             >
-              <div style={s.checkbox(item.done, saving === i)}>
+              {/* Checkbox */}
+              <div style={s.checkbox(item.done, saving === item.originalIndex)}>
                 {item.done && (
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path
@@ -306,7 +336,14 @@ export default function Checklist() {
                   </svg>
                 )}
               </div>
+
+              {/* Task text */}
               <span style={s.taskText(item.done)}>{item.task}</span>
+
+              {/* Priority badge */}
+              {item.priority && (
+                <PriorityBadge priority={item.priority} />
+              )}
             </div>
           ))
         )}
