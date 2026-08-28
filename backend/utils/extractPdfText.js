@@ -1,11 +1,10 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
+const _mod = require("pdf-parse");
+const pdfParse = typeof _mod === "function" ? _mod : (_mod.default || _mod);
 
 /**
  * Extracts plain text from a PDF buffer (from multer memory storage).
- * Uses createRequire so the CommonJS pdf-parse package loads correctly
- * inside an ES Module project on Node 18+ / Node 24 (Render).
  *
  * @param {Buffer} buffer  - The PDF file buffer
  * @returns {Promise<string>} - Extracted text
