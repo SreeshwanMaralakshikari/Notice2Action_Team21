@@ -4,18 +4,14 @@ import NoticeModel from "../models/NoticeModel.js";
 import { extractPdfText } from "../utils/extractPdfText.js";
 import { buildNoticePrompt } from "../utils/buildNoticePrompt.js";
 import { buildChatPrompt } from "../utils/buildChatPrompt.js";
-import { model } from "../config/gemini.js";
+import { generateWithRetry } from "../config/gemini.js";
 
 const noticeApp = express.Router();
 
-// Memory storage — no temp files written to disk
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /notice-api/process
-// Accepts: multipart/form-data with either
-//   • field "text"  (paste mode)
-//   • field "pdf"   (PDF upload mode)
 // ─────────────────────────────────────────────────────────────────────────────
 noticeApp.post("/process", upload.single("pdf"), async (req, res, next) => {
   try {
@@ -23,86 +19,60 @@ noticeApp.post("/process", upload.single("pdf"), async (req, res, next) => {
     let sourceType = "PASTE";
 
     if (req.file) {
-      // ── PDF upload path ──────────────────────
       rawText = await extractPdfText(req.file.buffer);
       sourceType = "PDF";
     } else if (req.body.text && req.body.text.trim()) {
-      // ── Paste text path ──────────────────────
       rawText = req.body.text.trim();
       sourceType = "PASTE";
     } else {
-      return res
-        .status(400)
-        .json({ message: "Please paste notice text or upload a PDF file." });
+      return res.status(400).json({ message: "Please paste notice text or upload a PDF file." });
     }
 
-    // Build prompt and call Gemini
     const prompt = buildNoticePrompt(rawText);
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const responseText = await generateWithRetry(prompt);
 
-    // Gemini may wrap JSON in a markdown code fence — strip it
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Gemini did not return valid JSON.");
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // ── Helper: safe array ────────────────────
     const safeArr = (v) => (Array.isArray(v) ? v : []);
 
-    // ── Map checklist: one item per action, carry priority ──
     const checklist = safeArr(parsed.actions).map((a) => ({
-      task:     a.title && a.description
-                  ? `${a.title}: ${a.description}`
-                  : (a.title || a.description || ""),
-      done:     false,
+      task: a.title && a.description ? `${a.title}: ${a.description}` : (a.title || a.description || ""),
+      done: false,
       priority: a.priority || "medium",
     }));
 
-    // ── Save to MongoDB ────────────────────────
     const notice = await NoticeModel.create({
       rawText,
       sourceType,
-
-      // Identity
       title:        parsed.title        || "",
       organization: parsed.organization || "",
       category:     parsed.category     || "General Notice",
-
-      // Summary
-      summary: parsed.summary || "",
-
-      // Eligibility — rich objects
+      summary:      parsed.summary      || "",
       eligibility: safeArr(parsed.eligibility).map((e) => ({
         criterion:   e.criterion   || "",
         value:       e.value       || "",
         source:      e.source      || "",
-        isMandatory: e.isMandatory !== false, // default true
+        isMandatory: e.isMandatory !== false,
       })),
-
-      // Important dates
       importantDates: safeArr(parsed.importantDates).map((d) => ({
         type:       d.type       || "",
         date:       d.date       || "",
         source:     d.source     || "",
-        isDeadline: d.isDeadline !== false, // default true
+        isDeadline: d.isDeadline !== false,
       })),
-
-      // Documents
       documents: safeArr(parsed.documents).map((d) => ({
         name:     d.name     || "",
         required: d.required !== false,
         source:   d.source   || "",
       })),
-
-      // Actions
       actions: safeArr(parsed.actions).map((a) => ({
         title:       a.title       || "",
         description: a.description || "",
         priority:    a.priority    || "medium",
         deadline:    a.deadline    || "",
       })),
-
-      // Links & contacts
       links: safeArr(parsed.links).map((l) => ({
         label: l.label || "",
         url:   l.url   || "",
@@ -111,14 +81,8 @@ noticeApp.post("/process", upload.single("pdf"), async (req, res, next) => {
         type:  c.type  || "",
         value: c.value || "",
       })),
-
-      // Checklist (generated from actions)
       checklist,
-
-      // Uncertainties
       uncertainties: safeArr(parsed.uncertainties).filter(Boolean),
-
-      // Legacy deadlines field left empty — UI falls back to importantDates
       deadlines: [],
     });
 
@@ -130,13 +94,11 @@ noticeApp.post("/process", upload.single("pdf"), async (req, res, next) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /notice-api/notice/:id
-// Re-fetch a previously processed notice
 // ─────────────────────────────────────────────────────────────────────────────
 noticeApp.get("/notice/:id", async (req, res, next) => {
   try {
     const notice = await NoticeModel.findById(req.params.id);
-    if (!notice)
-      return res.status(404).json({ message: "Notice not found." });
+    if (!notice) return res.status(404).json({ message: "Notice not found." });
     res.json(notice);
   } catch (err) {
     next(err);
@@ -145,8 +107,6 @@ noticeApp.get("/notice/:id", async (req, res, next) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUT /notice-api/notice/:id/checklist
-// Flip one checklist item's done flag
-// Body: { index: Number, done: Boolean }
 // ─────────────────────────────────────────────────────────────────────────────
 noticeApp.put("/notice/:id/checklist", async (req, res, next) => {
   try {
@@ -155,8 +115,7 @@ noticeApp.put("/notice/:id/checklist", async (req, res, next) => {
       return res.status(400).json({ message: "index is required." });
     }
     const notice = await NoticeModel.findById(req.params.id);
-    if (!notice)
-      return res.status(404).json({ message: "Notice not found." });
+    if (!notice) return res.status(404).json({ message: "Notice not found." });
 
     const idx = Number(index);
     if (idx < 0 || idx >= notice.checklist.length) {
@@ -175,8 +134,6 @@ noticeApp.put("/notice/:id/checklist", async (req, res, next) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /notice-api/notice/:id/chat
-// "Ask This Notice" chatbot — grounded strictly in the notice's text.
-// Body: { message: String, history: [{role, content}], studentProfile?: Object }
 // ─────────────────────────────────────────────────────────────────────────────
 noticeApp.post("/notice/:id/chat", async (req, res, next) => {
   try {
@@ -189,18 +146,6 @@ noticeApp.post("/notice/:id/chat", async (req, res, next) => {
     const notice = await NoticeModel.findById(req.params.id);
     if (!notice) {
       return res.status(404).json({ success: false, message: "Notice not found." });
-    }
-
-    if (!model) {
-      // Gemini not configured — return a polite fallback
-      return res.json({
-        success: true,
-        data: {
-          reply:
-            "The AI assistant is not configured on this server. " +
-            "Please check your GEMINI_API_KEY environment variable.",
-        },
-      });
     }
 
     const prompt = buildChatPrompt({
@@ -219,12 +164,10 @@ noticeApp.post("/notice/:id/chat", async (req, res, next) => {
       },
       studentProfile,
       userMessage: message.trim(),
-      chatHistory: history.slice(-6), // keep last 6 turns to stay within context limits
+      chatHistory: history.slice(-6),
     });
 
-    const result = await model.generateContent(prompt);
-    const reply  = result.response?.text()?.trim() ||
-                   "I couldn't generate a response. Please try again.";
+    const reply = (await generateWithRetry(prompt))?.trim() || "I couldn't generate a response. Please try again.";
 
     res.json({ success: true, data: { reply } });
   } catch (err) {
