@@ -14,9 +14,9 @@ if (apiKey && apiKey !== "your_gemini_api_key_here") {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function generateWithRetry(prompt, maxRetries = 3) {
+export async function generateWithRetry(prompt, maxRetries = 5) {
   if (!ai) throw new Error("Gemini not configured.");
-  let wait = 1000;
+  let wait = 2000;
   for (let i = 1; i <= maxRetries; i++) {
     try {
       const response = await ai.models.generateContent({
@@ -28,9 +28,11 @@ export async function generateWithRetry(prompt, maxRetries = 3) {
       const status = err.status || err.statusCode;
       if ((status === 429 || status === 503) && i < maxRetries) {
         console.warn(`Gemini busy, retry ${i}/${maxRetries} in ${wait}ms...`);
-        await delay(wait + Math.random() * 200);
+        await delay(wait + Math.random() * 500);
         wait *= 2;
-      } else throw err;
+      } else {
+        throw err;
+      }
     }
   }
 }
