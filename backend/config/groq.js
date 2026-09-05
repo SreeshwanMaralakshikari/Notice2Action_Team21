@@ -21,7 +21,7 @@ export async function generateText(prompt) {
   if (!groq) throw new Error("Groq not configured. Set GROQ_API_KEY in your environment.");
 
   const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: "openai/gpt-oss-120b",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.3,
   });
