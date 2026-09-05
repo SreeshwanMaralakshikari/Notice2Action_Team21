@@ -13,7 +13,7 @@ if (apiKey && apiKey !== "your_groq_api_key_here") {
 }
 
 /**
- * Sends a prompt to Groq (llama-3.3-70b-versatile) and returns the response text.
+ * Sends a prompt to Groq (openai/gpt-oss-120b) and returns the response text.
  * @param {string} prompt
  * @returns {Promise<string>}
  */
@@ -24,6 +24,7 @@ export async function generateText(prompt) {
     model: "openai/gpt-oss-120b",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.3,
+    max_tokens: 4096,
   });
 
   return response.choices[0].message.content;
