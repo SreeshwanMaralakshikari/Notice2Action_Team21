@@ -4,7 +4,7 @@ import NoticeModel from "../models/NoticeModel.js";
 import { extractPdfText } from "../utils/extractPdfText.js";
 import { buildNoticePrompt } from "../utils/buildNoticePrompt.js";
 import { buildChatPrompt } from "../utils/buildChatPrompt.js";
-import { generateWithRetry } from "../config/gemini.js";
+import { generateText } from "../config/groq.js";
 
 const noticeApp = express.Router();
 
@@ -29,10 +29,10 @@ noticeApp.post("/process", upload.single("pdf"), async (req, res, next) => {
     }
 
     const prompt = buildNoticePrompt(rawText);
-    const responseText = await generateWithRetry(prompt);
+    const responseText = await generateText(prompt);
 
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Gemini did not return valid JSON.");
+    if (!jsonMatch) throw new Error("AI did not return valid JSON. Please try again.");
     const parsed = JSON.parse(jsonMatch[0]);
 
     const safeArr = (v) => (Array.isArray(v) ? v : []);
@@ -167,7 +167,7 @@ noticeApp.post("/notice/:id/chat", async (req, res, next) => {
       chatHistory: history.slice(-6),
     });
 
-    const reply = (await generateWithRetry(prompt))?.trim() || "I couldn't generate a response. Please try again.";
+    const reply = (await generateText(prompt))?.trim() || "I couldn't generate a response. Please try again.";
 
     res.json({ success: true, data: { reply } });
   } catch (err) {

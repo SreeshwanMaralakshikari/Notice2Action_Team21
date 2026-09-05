@@ -1,7 +1,7 @@
 /**
- * Builds the Gemini prompt for notice parsing.
- * Returns a prompt string that asks Gemini for strict JSON only —
- * using the richer Phase 4 schema (organization, importantDates,
+ * Builds the AI prompt for notice parsing.
+ * Returns a prompt string that instructs the AI to return strict JSON only —
+ * using the Phase 4 schema (organization, importantDates,
  * documents, actions, links, contacts, uncertainties).
  */
 export function buildNoticePrompt(rawText, fileName = 'Pasted Notice') {

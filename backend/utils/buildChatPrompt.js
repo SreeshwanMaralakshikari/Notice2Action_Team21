@@ -1,7 +1,7 @@
 /**
  * buildChatPrompt.js — Phase 4 Priority 3
  *
- * Builds a grounded Gemini prompt for the "Ask This Notice" chatbot.
+ * Builds a grounded AI prompt for the "Ask This Notice" chatbot.
  * All answers are strictly grounded in the notice text + metadata —
  * no hallucination, no guessing outside the document.
  *
@@ -11,7 +11,7 @@
  *   studentProfile — from localStorage (null if not set)
  *   userMessage    — the student's current question
  *   chatHistory    — [{role:'user'|'ai', content:string}] last ≤6 turns
- * @returns {string} prompt string to pass to model.generateContent()
+ * @returns {string} prompt string to pass to generateText()
  */
 export function buildChatPrompt({
   noticeText,
