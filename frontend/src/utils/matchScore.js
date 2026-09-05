@@ -22,6 +22,11 @@ const CATEGORY_INTERESTS = {
   'Academic Opportunity':   ['academic', 'research', 'study', 'project'],
   'Government Opportunity': ['government', 'psu', 'upsc', 'civil services'],
   'General Notice':         [],
+  // Legacy category aliases — map to the same interests as their Phase 4 equivalents
+  Exam:   ['exam', 'test', 'certification'],
+  Fee:    [],
+  Hostel: [],
+  Other:  [],
 };
 
 /**

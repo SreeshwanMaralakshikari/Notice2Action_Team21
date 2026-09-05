@@ -4,7 +4,7 @@
  * using the Phase 4 schema (organization, importantDates,
  * documents, actions, links, contacts, uncertainties).
  */
-export function buildNoticePrompt(rawText, fileName = 'Pasted Notice') {
+export function buildNoticePrompt(rawText) {
   return `
 You are Notice2Action AI, an expert academic and career notice intelligence engine for college students.
 Your mission: "Don't just understand the notice. Know what the student needs to do."

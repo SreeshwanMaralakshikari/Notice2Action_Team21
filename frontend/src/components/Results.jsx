@@ -349,8 +349,6 @@ export default function Results() {
   // ── Results ────────────────────────────────────────────────────────────────
   return (
     <div style={s.page}>
-      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
-
       {/* Top bar */}
       <div style={s.topBar}>
         <span style={s.logo} onClick={() => navigate("/")}>Notice2Action</span>

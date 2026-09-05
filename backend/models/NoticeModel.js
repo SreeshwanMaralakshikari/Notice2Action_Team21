@@ -37,7 +37,7 @@ const importantDateSchema = new mongoose.Schema(
     type:       { type: String, default: "" },   // "Application Deadline", "Exam Date", etc.
     date:       { type: String, default: "" },
     source:     { type: String, default: "" },
-    isDeadline: { type: Boolean, default: false },
+    isDeadline: { type: Boolean, default: true },
   },
   { _id: false }
 );

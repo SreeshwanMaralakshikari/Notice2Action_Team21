@@ -27,5 +27,7 @@ export async function generateText(prompt) {
     max_tokens: 4096,
   });
 
-  return response.choices[0].message.content;
+  const content = response.choices?.[0]?.message?.content;
+  if (!content) throw new Error("AI returned an empty response. Please try again.");
+  return content;
 }

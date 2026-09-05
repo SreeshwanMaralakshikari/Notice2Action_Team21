@@ -8,7 +8,10 @@ import { generateText } from "../config/groq.js";
 
 const noticeApp = express.Router();
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB — matches the UI's stated limit
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /notice-api/process

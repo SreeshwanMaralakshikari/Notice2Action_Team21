@@ -504,7 +504,7 @@ export default function MatchScoreCard({ notice }) {
                 gap: 6,
               }}
             >
-              <span style={{ transition: 'transform .2s', display: 'inline-block', transform: showReasons ? 'rotate(90deg)' : 'none' }}>▶</span>
+              <span style={{ transition: 'transform .2s', display: 'inline-block', transform: showReasons ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
               {showReasons ? 'Hide' : 'Show'} criterion-by-criterion breakdown
             </button>
 

@@ -3,7 +3,7 @@
  * Pure JS — no backend dependency.
  *
  * Evaluates how well a student profile matches the notice's eligibility criteria.
- * Each criterion is parsed heuristically from the structured fields returned by Gemini.
+ * Each criterion is parsed heuristically from the structured fields returned by the AI.
  *
  * Returns: { status, headline, reasons[], summary }
  *   status  : 'ELIGIBLE' | 'INCONCLUSIVE' | 'NOT_ELIGIBLE'
@@ -97,7 +97,6 @@ export function evaluatePersonalizedEligibility(studentProfile, noticeEligibilit
 
     const { criterion = '', value = '', isMandatory = true } = item;
     const cl = criterion.toLowerCase();
-    const vl = value.toLowerCase();
     let verdict = 'unknown';
     let detail  = 'Could not verify automatically — check manually.';
 
@@ -153,7 +152,7 @@ export function evaluatePersonalizedEligibility(studentProfile, noticeEligibilit
   if (failCount > 0) {
     status   = 'NOT_ELIGIBLE';
     headline = 'You May Not Qualify';
-    summary  = `You do not meet ${failCount} mandatory criterion${failCount > 1 ? 'a' : ''} — verify before applying.`;
+    summary  = `You do not meet ${failCount} mandatory ${failCount > 1 ? 'criteria' : 'criterion'} — verify before applying.`;
   } else if (unknownCount > 0 && unknownCount === reasons.length) {
     status   = 'INCONCLUSIVE';
     headline = 'Check Manually';
@@ -161,7 +160,7 @@ export function evaluatePersonalizedEligibility(studentProfile, noticeEligibilit
   } else if (unknownCount > 0) {
     status   = 'INCONCLUSIVE';
     headline = 'Likely Eligible';
-    summary  = `You meet the verifiable criteria. ${unknownCount} criterion${unknownCount > 1 ? 'a require' : ' requires'} manual verification.`;
+    summary  = `You meet the verifiable criteria. ${unknownCount} ${unknownCount > 1 ? 'criteria require' : 'criterion requires'} manual verification.`;
   } else {
     status   = 'ELIGIBLE';
     headline = 'You Are Eligible! 🎉';

@@ -8,7 +8,6 @@ const C = {
   surface: "#0d1929",
   border: "#1c3251",
   accent: "#f97316",
-  accentHover: "#ea6c10",
   text: "#e4ecf7",
   muted: "#5e7ea8",
   danger: "#f43f5e",
@@ -35,7 +34,6 @@ export default function Home() {
   const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const recent = getRecentNotices();
 
@@ -188,11 +186,11 @@ export default function Home() {
       padding: "13px 0",
       borderRadius: 10,
       border: "none",
-      background: loading ? C.border : C.accent,
+      background: C.accent,
       color: "#fff",
       fontWeight: 700,
       fontSize: 15,
-      cursor: loading ? "not-allowed" : "pointer",
+      cursor: "pointer",
       transition: "background .15s",
       letterSpacing: "0.3px",
     },
@@ -329,9 +327,8 @@ export default function Home() {
         <button
           style={s.generateBtn}
           onClick={handleGenerate}
-          disabled={loading}
         >
-          {loading ? "Processing…" : "Generate Action Plan →"}
+          Generate Action Plan →
         </button>
       </div>
 

@@ -9,7 +9,20 @@ dotenv.config();
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow server-to-server (no Origin header) and listed origins
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
+  })
+);
 app.use(express.json());
 
 // ── Routes ────────────────────────────────────────────────────────────────────

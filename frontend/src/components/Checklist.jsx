@@ -71,6 +71,8 @@ export default function Checklist() {
   }, [id]);
 
   async function toggle(index) {
+    if (saving !== null) return; // prevent concurrent toggles → stale rollback
+
     const updated = items.map((item, i) =>
       i === index ? { ...item, done: !item.done } : item
     );
@@ -93,8 +95,14 @@ export default function Checklist() {
   const doneCount = items.filter((i) => i.done).length;
   const allDone = items.length > 0 && doneCount === items.length;
 
-  // Sort: high → medium → low (undone first, done at the bottom)
-  const sortedItems = [...items].map((item, originalIndex) => ({ ...item, originalIndex }));
+  // Sort: undone first, then high → medium → low priority
+  const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+  const sortedItems = [...items]
+    .map((item, originalIndex) => ({ ...item, originalIndex }))
+    .sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1; // undone first
+      return (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1);
+    });
 
   const s = {
     page: {
